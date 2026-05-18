@@ -1,93 +1,89 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.ArrayList;
 
 public class MainOrderPanel extends JPanel {
 
     private Order order;
     private Menu menu;
+
     private JPanel menuPanel;
     private JLabel bottomPriceButton;
-    private DefaultListModel<String> orderListModel;
-    private JList<String> orderList;
-    private ArrayList<Object> realItems = new ArrayList<>();
-    private JButton payButton;
-    private final Color DARK_RED = new Color(90, 15, 15);
-    private final Color DEEP_RED = new Color(130, 25, 20);
-    private final Color GOLD = new Color(218, 165, 32);
-    private final Color LIGHT_GOLD = new Color(255, 230, 160);
-    private final Color CREAM = new Color(255, 248, 220);
+    private OrderSidePanel orderSidePanel;
+
+    private ArrayList<OrderFood> comboFood = new ArrayList<>();
 
     private static final double TAX_RATE = 0.13;
-    private ArrayList<OrderFood> comboFood = new ArrayList<>();
 
     public MainOrderPanel(Order order) {
         this.order = order;
         this.menu = new Menu();
 
         setLayout(new BorderLayout());
+        setBackground(UIStyle.DARK_RED);
 
-        add(createCategoryPanel(), BorderLayout.WEST);
+        add(new CategoryPanel(
+                () -> showEntrees(),
+                () -> showDesserts(),
+                () -> showDrinks(),
+                () -> showComboPanel()
+        ), BorderLayout.WEST);
 
-        menuPanel = new JPanel(new GridLayout(0, 3, 15, 15));
+        menuPanel = new JPanel(new GridLayout(0, 3, 12, 12));
         menuPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        menuPanel.setBackground(UIStyle.DARK_RED);
 
-        JScrollPane scrollPane = new JScrollPane(menuPanel);
-        add(scrollPane, BorderLayout.CENTER);
-        add(createOrderSidePanel(), BorderLayout.EAST);
+        add(new JScrollPane(menuPanel), BorderLayout.CENTER);
+
+        orderSidePanel = new OrderSidePanel(
+                order,
+                () -> updateBottomPrice(),
+                () -> calculateFinalWithTax()
+        );
+
+        add(orderSidePanel, BorderLayout.EAST);
+
         bottomPriceButton = new JLabel("", SwingConstants.CENTER);
         bottomPriceButton.setFont(new Font("Helvetica Neue", Font.BOLD, 18));
         bottomPriceButton.setOpaque(true);
-        bottomPriceButton.setBackground(DEEP_RED);
-        bottomPriceButton.setForeground(GOLD);
+        bottomPriceButton.setBackground(UIStyle.DEEP_RED);
+        bottomPriceButton.setForeground(UIStyle.GOLD);
         bottomPriceButton.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        bottomPriceButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        bottomPriceButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                showOrderListWindow();
-            }
-        });
         add(bottomPriceButton, BorderLayout.SOUTH);
+
         showEntrees();
         updateBottomPrice();
-    }
-
-    private JPanel createCategoryPanel() {
-        JPanel categoryPanel = new JPanel();
-        categoryPanel.setLayout(new GridLayout(0, 1, 10, 10));
-        categoryPanel.setPreferredSize(new Dimension(130, 0));
-        categoryPanel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
-        categoryPanel.setBackground(DARK_RED);
-        categoryPanel.setBorder(BorderFactory.createLineBorder(GOLD, 1));
-
-        JButton entreeButton = new JButton("Entrees");
-        JButton dessertButton = new JButton("Dessert");
-        JButton drinkButton = new JButton("Drink");
-        JButton comboButton = new JButton("Combo");
-        styleButton(entreeButton);
-        styleButton(dessertButton);
-        styleButton(drinkButton);
-        styleButton(comboButton);
-
-        entreeButton.addActionListener(e -> showEntrees());
-        dessertButton.addActionListener(e -> showDesserts());
-        drinkButton.addActionListener(e -> showDrinks());
-        comboButton.addActionListener(e -> showComboPanel());
-
-        categoryPanel.add(entreeButton);
-        categoryPanel.add(dessertButton);
-        categoryPanel.add(drinkButton);
-        categoryPanel.add(comboButton);
-
-        return categoryPanel;
     }
 
     private void clearMenu() {
         menuPanel.removeAll();
         menuPanel.revalidate();
         menuPanel.repaint();
+    }
+
+    private double calculateTax() {
+        return order.calculateFinal() * TAX_RATE;
+    }
+
+    private double calculateFinalWithTax() {
+        return order.calculateFinal() + calculateTax();
+    }
+
+    private void updateBottomPrice() {
+        bottomPriceButton.setText(
+                String.format(
+                        "Original: $%.2f     Before Tax: $%.2f     Tax: $%.2f     Final: $%.2f",
+                        order.calculateOriginal(),
+                        order.calculateFinal(),
+                        calculateTax(),
+                        calculateFinalWithTax()
+                )
+        );
+
+        if (orderSidePanel != null) {
+            orderSidePanel.refresh();
+        }
     }
 
     private void showEntrees() {
@@ -100,144 +96,6 @@ public class MainOrderPanel extends JPanel {
 
     private void showDrinks() {
         showMenuByType("drink");
-    }
-
-    private JPanel createOrderSidePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Color.WHITE);
-        panel.setPreferredSize(new Dimension(320, 0));
-        panel.setBorder(
-                BorderFactory.createTitledBorder(
-                        BorderFactory.createLineBorder(
-                                new Color(180, 30, 30),
-                                3),
-                        "Order List",
-                        0,
-                        0,
-                        new Font("Avenir Next", Font.BOLD, 24),
-                        new Color(180, 30, 30)));
-
-        orderListModel = new DefaultListModel<>();
-        orderList = new JList<>(orderListModel);
-        orderList.setBackground(Color.WHITE);
-        orderList.setForeground(new Color(120, 20, 20));
-        orderList.setFont(
-                new Font("Avenir Next", Font.PLAIN, 17));
-        orderList.setFixedCellHeight(32);
-        orderList.setSelectionBackground(
-                new Color(255, 220, 220));
-        orderList.setSelectionForeground(
-                new Color(150, 20, 20));
-
-        JButton deleteButton = new JButton("Delete Selected Item");
-        deleteButton.setForeground(DARK_RED);
-
-        deleteButton.addActionListener(e -> {
-            int index = orderList.getSelectedIndex();
-
-            if (index == -1) {
-                JOptionPane.showMessageDialog(this, "Please select an item to delete.");
-                return;
-            }
-
-            Object selectedItem = realItems.get(index);
-
-            if (selectedItem == null) {
-                JOptionPane.showMessageDialog(this, "Please select a food or combo item.");
-                return;
-            }
-
-            if (selectedItem instanceof OrderFood) {
-                order.deleteSingleFood((OrderFood) selectedItem);
-            } else if (selectedItem instanceof Combo) {
-                order.deleteCombo((Combo) selectedItem);
-            }
-
-            updateOrderSidePanel();
-            updateBottomPrice();
-        });
-
-        payButton = new JButton("Pay");
-        payButton.setForeground(DARK_RED);
-        payButton.addActionListener(e -> showPaymentWindow(null));
-
-        JPanel bottomPanel = new JPanel(new GridLayout(2, 1));
-        bottomPanel.add(deleteButton);
-        bottomPanel.add(payButton);
-
-        JScrollPane scrollPane = new JScrollPane(orderList);
-
-        scrollPane.setBorder(
-                BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        scrollPane.getViewport().setBackground(Color.WHITE);
-
-        panel.add(scrollPane, BorderLayout.CENTER);
-        panel.add(bottomPanel, BorderLayout.SOUTH);
-
-        updateOrderSidePanel();
-
-        return panel;
-    }
-
-    private void updateOrderSidePanel() {
-        orderListModel.clear();
-        realItems.clear();
-
-        loadOrderList(orderListModel, realItems);
-
-        double finalWithTax = calculateFinalWithTax();
-
-        if (finalWithTax <= 0) {
-            payButton.setEnabled(false);
-            payButton.setText("Pay");
-            payButton.setBackground(Color.GRAY);
-            payButton.setForeground(Color.WHITE);
-        } else {
-            payButton.setForeground(DARK_RED);
-            payButton.setEnabled(true);
-            payButton.setText(String.format("Pay $%.2f", finalWithTax));
-        }
-    }
-
-    private void styleButton(JButton button) {
-
-        button.setBackground(new Color(140, 20, 20));
-
-        button.setForeground(new Color(255, 215, 120));
-
-        button.setFont(
-                new Font("Avenir Next", Font.BOLD, 18));
-
-        button.setFocusPainted(false);
-
-        button.setBorder(
-                BorderFactory.createLineBorder(
-                        new Color(255, 215, 120),
-                        2));
-    }
-    private void styleButtonRED(JButton button) {
-
-        button.setBackground(new Color(140, 20, 20));
-
-        button.setForeground(DARK_RED);
-
-        button.setFont(
-                new Font("Avenir Next", Font.BOLD, 18));
-
-        button.setFocusPainted(false);
-
-        button.setBorder(
-                BorderFactory.createLineBorder(
-                        DARK_RED));
-    }
-
-    private double calculateTax() {
-        return order.calculateFinal() * TAX_RATE;
-    }
-
-    private double calculateFinalWithTax() {
-        return order.calculateFinal() + calculateTax();
     }
 
     private void showMenuByType(String type) {
@@ -255,45 +113,38 @@ public class MainOrderPanel extends JPanel {
 
     private void addFoodCard(FoodStorage item) {
         JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(DARK_RED);
-        card.setBorder(BorderFactory.createLineBorder(DARK_RED, 2));
-        java.io.File file = new java.io.File(item.getImagePath());
+        card.setBackground(UIStyle.DARK_RED);
+        card.setBorder(BorderFactory.createLineBorder(UIStyle.GOLD, 2));
 
-        System.out.println(item.getName());
-        System.out.println(item.getImagePath());
-        System.out.println(file.exists());
-        ImageIcon icon = new ImageIcon(item.getImagePath());
-
-        Image scaledImage = icon.getImage().getScaledInstance(
-                150,
-                120,
-                Image.SCALE_SMOOTH);
-
-        JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
-
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        JLabel imageLabel = createImageLabel(item.getImagePath());
 
         JLabel nameLabel = new JLabel(item.getName(), SwingConstants.CENTER);
         nameLabel.setFont(new Font("Helvetica Neue", Font.BOLD, 16));
+        nameLabel.setForeground(UIStyle.LIGHT_GOLD);
 
         JLabel priceLabel = new JLabel(
                 String.format("$%.2f", item.getPrice()),
-                SwingConstants.CENTER);
+                SwingConstants.CENTER
+        );
+        priceLabel.setForeground(UIStyle.LIGHT_GOLD);
 
         JButton addButton = new JButton("Add");
+        UIStyle.styleGoldButton(addButton);
 
         addButton.addActionListener(e -> {
             OrderFood food = new OrderFood(
                     item.getName(),
                     item.getPrice(),
                     1,
-                    item.getType());
+                    item.getType()
+            );
 
             order.addSingleFood(food);
             updateBottomPrice();
         });
 
         JPanel infoPanel = new JPanel(new GridLayout(2, 1));
+        infoPanel.setBackground(UIStyle.DARK_RED);
         infoPanel.add(nameLabel);
         infoPanel.add(priceLabel);
 
@@ -302,8 +153,21 @@ public class MainOrderPanel extends JPanel {
         card.add(addButton, BorderLayout.SOUTH);
 
         menuPanel.add(card);
-        menuPanel.revalidate();
-        menuPanel.repaint();
+    }
+
+    private JLabel createImageLabel(String imagePath) {
+        ImageIcon icon = new ImageIcon(imagePath);
+
+        Image scaledImage = icon.getImage().getScaledInstance(
+                150,
+                120,
+                Image.SCALE_SMOOTH
+        );
+
+        JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        return imageLabel;
     }
 
     private void showComboPanel() {
@@ -315,71 +179,55 @@ public class MainOrderPanel extends JPanel {
         clearMenu();
         menuPanel.setLayout(new BorderLayout());
 
-        JPanel page = new JPanel(new BorderLayout());
-
-        JLabel title = new JLabel("Combo Step 1: Choose Entrees", SwingConstants.CENTER);
-        title.setFont(new Font("Helvetica Neue", Font.BOLD, 24));
+        JPanel page = createComboPage("Combo Step 1: Choose Entrees");
 
         JPanel foodGrid = new JPanel(new GridLayout(0, 3, 12, 12));
+        foodGrid.setBackground(UIStyle.DARK_RED);
 
-        JLabel countLabel = new JLabel("Entrees selected: 0", SwingConstants.CENTER);
+        JLabel countLabel = createComboCountLabel("Entrees selected: 0");
 
         JButton nextButton = new JButton("Next: Choose Desserts");
         nextButton.setVisible(false);
-        styleButtonRED(nextButton);
+        UIStyle.styleRedTextButton(nextButton);
 
         for (FoodStorage item : menu.getItemsByType("entree")) {
-            JPanel card = createComboFoodCard(
+            foodGrid.add(createComboFoodCard(
                     item,
                     "adult entree",
                     countLabel,
                     nextButton,
-                    "entree");
-
-            foodGrid.add(card);
+                    "entree"
+            ));
         }
 
         nextButton.addActionListener(e -> showComboDessertStep());
 
-        JPanel bottom = new JPanel(new GridLayout(2, 1));
-        bottom.add(countLabel);
-        bottom.add(nextButton);
-
-        page.add(title, BorderLayout.NORTH);
-        page.add(new JScrollPane(foodGrid), BorderLayout.CENTER);
-        page.add(bottom, BorderLayout.SOUTH);
-
-        menuPanel.add(page, BorderLayout.CENTER);
-        menuPanel.revalidate();
-        menuPanel.repaint();
+        addComboPageContent(page, foodGrid, countLabel, nextButton);
     }
 
     private void showComboDessertStep() {
         clearMenu();
         menuPanel.setLayout(new BorderLayout());
 
-        JPanel page = new JPanel(new BorderLayout());
-
-        JLabel title = new JLabel("Combo Step 2: Choose Desserts", SwingConstants.CENTER);
-        title.setFont(new Font("Helvetica Neue", Font.BOLD, 24));
+        JPanel page = createComboPage("Combo Step 2: Choose Desserts");
 
         JPanel foodGrid = new JPanel(new GridLayout(0, 3, 12, 12));
+        foodGrid.setBackground(UIStyle.DARK_RED);
 
-        JLabel countLabel = new JLabel("", SwingConstants.CENTER);
+        JLabel countLabel = createComboCountLabel("");
 
         JButton nextButton = new JButton("Next: Choose Drinks");
         nextButton.setVisible(false);
-        styleButtonRED(nextButton);
+        UIStyle.styleRedTextButton(nextButton);
 
         for (FoodStorage item : menu.getItemsByType("dessert")) {
-            JPanel card = createComboFoodCard(
+            foodGrid.add(createComboFoodCard(
                     item,
                     "dessert",
                     countLabel,
                     nextButton,
-                    "dessert");
-
-            foodGrid.add(card);
+                    "dessert"
+            ));
         }
 
         updateComboStepLabel(countLabel, "dessert");
@@ -387,45 +235,32 @@ public class MainOrderPanel extends JPanel {
 
         nextButton.addActionListener(e -> showComboDrinkStep());
 
-        JPanel bottom = new JPanel(new GridLayout(2, 1));
-        bottom.add(countLabel);
-        bottom.add(nextButton);
-
-        page.add(title, BorderLayout.NORTH);
-        page.add(new JScrollPane(foodGrid), BorderLayout.CENTER);
-        page.add(bottom, BorderLayout.SOUTH);
-
-        menuPanel.add(page, BorderLayout.CENTER);
-        menuPanel.revalidate();
-        menuPanel.repaint();
+        addComboPageContent(page, foodGrid, countLabel, nextButton);
     }
 
     private void showComboDrinkStep() {
         clearMenu();
         menuPanel.setLayout(new BorderLayout());
 
-        JPanel page = new JPanel(new BorderLayout());
+        JPanel page = createComboPage("Combo Step 3: Choose Drinks");
 
-        JLabel title = new JLabel("Combo Step 3: Choose Drinks", SwingConstants.CENTER);
-        title.setFont(new Font("Helvetica Neue", Font.BOLD, 24));
+        JPanel foodGrid = new JPanel(new GridLayout(0, 3, 12, 12));
+        foodGrid.setBackground(UIStyle.DARK_RED);
 
-        JPanel foodGrid = new JPanel(new GridLayout(0, 3, 15, 15));
-
-        JLabel countLabel = new JLabel("", SwingConstants.CENTER);
+        JLabel countLabel = createComboCountLabel("");
 
         JButton orderButton = new JButton("Order Combo");
         orderButton.setVisible(false);
-        styleButtonRED(orderButton);
+        UIStyle.styleRedTextButton(orderButton);
 
         for (FoodStorage item : menu.getItemsByType("drink")) {
-            JPanel card = createComboFoodCard(
+            foodGrid.add(createComboFoodCard(
                     item,
                     "drink",
                     countLabel,
                     orderButton,
-                    "drink");
-
-            foodGrid.add(card);
+                    "drink"
+            ));
         }
 
         updateComboStepLabel(countLabel, "drink");
@@ -451,16 +286,53 @@ public class MainOrderPanel extends JPanel {
                         this,
                         "Invalid combo. Entrees, desserts, and drinks must have the same amount.",
                         "Combo Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.ERROR_MESSAGE
+                );
             }
         });
 
-        JPanel bottom = new JPanel(new GridLayout(2, 1));
-        bottom.add(countLabel);
-        bottom.add(orderButton);
+        addComboPageContent(page, foodGrid, countLabel, orderButton);
+    }
+
+    private JPanel createComboPage(String titleText) {
+        JPanel page = new JPanel(new BorderLayout());
+        page.setBackground(UIStyle.DARK_RED);
+
+        JLabel title = new JLabel(titleText, SwingConstants.CENTER);
+        title.setFont(new Font("Helvetica Neue", Font.BOLD, 24));
+        title.setForeground(UIStyle.DARK_RED);
+        title.setOpaque(true);
+        title.setBackground(UIStyle.CREAM);
 
         page.add(title, BorderLayout.NORTH);
-        page.add(new JScrollPane(foodGrid), BorderLayout.CENTER);
+
+        return page;
+    }
+
+    private JLabel createComboCountLabel(String text) {
+        JLabel label = new JLabel(text, SwingConstants.CENTER);
+        label.setFont(new Font("Avenir Next", Font.BOLD, 18));
+        label.setForeground(UIStyle.DARK_RED);
+        label.setOpaque(true);
+        label.setBackground(UIStyle.CREAM);
+        return label;
+    }
+
+    private void addComboPageContent(
+            JPanel page,
+            JPanel foodGrid,
+            JLabel countLabel,
+            JButton button
+    ) {
+        JPanel bottom = new JPanel(new GridLayout(2, 1));
+        bottom.setBackground(UIStyle.CREAM);
+        bottom.add(countLabel);
+        bottom.add(button);
+
+        JScrollPane scrollPane = new JScrollPane(foodGrid);
+        scrollPane.getViewport().setBackground(UIStyle.DARK_RED);
+
+        page.add(scrollPane, BorderLayout.CENTER);
         page.add(bottom, BorderLayout.SOUTH);
 
         menuPanel.add(page, BorderLayout.CENTER);
@@ -473,48 +345,47 @@ public class MainOrderPanel extends JPanel {
             String type,
             JLabel countLabel,
             JButton nextOrOrderButton,
-            String step) {
-
+            String step
+    ) {
         JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(DARK_RED);
+        card.setBackground(UIStyle.CREAM);
+        card.setBorder(BorderFactory.createLineBorder(UIStyle.DARK_RED, 3));
 
-        card.setBorder(
-                BorderFactory.createLineBorder( DARK_RED,3));
-
-        ImageIcon icon = new ImageIcon(item.getImagePath());
-
-        Image scaledImage = icon.getImage().getScaledInstance(
-                150,
-                120,
-                Image.SCALE_SMOOTH);
-
-        JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        JLabel imageLabel = createImageLabel(item.getImagePath());
 
         JLabel nameLabel = new JLabel(item.getName(), SwingConstants.CENTER);
         nameLabel.setFont(new Font("Avenir Next", Font.BOLD, 18));
-        nameLabel.setForeground(DARK_RED);
+        nameLabel.setForeground(UIStyle.DARK_RED);
 
-        JLabel priceLabel = new JLabel(String.format("$%.2f", item.getPrice()), SwingConstants.CENTER);
-        priceLabel.setForeground(DARK_RED);
+        JLabel priceLabel = new JLabel(
+                String.format("$%.2f", item.getPrice()),
+                SwingConstants.CENTER
+        );
+        priceLabel.setForeground(UIStyle.DARK_RED);
 
         JLabel amountLabel = new JLabel("Selected: 0", SwingConstants.CENTER);
+        amountLabel.setForeground(UIStyle.DARK_RED);
 
         JButton addButton = new JButton("+");
         JButton removeButton = new JButton("-");
-        addButton.setForeground(DARK_RED);
-        removeButton.setForeground(DARK_RED);
+
+        UIStyle.styleRedTextButton(addButton);
+        UIStyle.styleRedTextButton(removeButton);
 
         addButton.addActionListener(e -> {
             OrderFood food = new OrderFood(
                     item.getName(),
                     item.getPrice(),
                     1,
-                    type);
+                    type
+            );
 
             comboFood.add(food);
 
-            amountLabel.setText("Selected: " + countSpecificComboFood(item.getName(), type));
+            amountLabel.setText(
+                    "Selected: " + countSpecificComboFood(item.getName(), type)
+            );
+
             updateComboStepLabel(countLabel, step);
             updateComboButtonVisibility(nextOrOrderButton, step);
         });
@@ -522,12 +393,16 @@ public class MainOrderPanel extends JPanel {
         removeButton.addActionListener(e -> {
             removeOneComboFood(item.getName(), type);
 
-            amountLabel.setText("Selected: " + countSpecificComboFood(item.getName(), type));
+            amountLabel.setText(
+                    "Selected: " + countSpecificComboFood(item.getName(), type)
+            );
+
             updateComboStepLabel(countLabel, step);
             updateComboButtonVisibility(nextOrOrderButton, step);
         });
 
         JPanel infoPanel = new JPanel(new GridLayout(3, 1));
+        infoPanel.setBackground(UIStyle.CREAM);
         infoPanel.add(nameLabel);
         infoPanel.add(priceLabel);
         infoPanel.add(amountLabel);
@@ -610,173 +485,5 @@ public class MainOrderPanel extends JPanel {
         } else if (step.equals("drink")) {
             button.setVisible(drinkCount == entreeCount && entreeCount > 0);
         }
-    }
-
-    private void updateBottomPrice() {
-        double original = order.calculateOriginal();
-        double beforeTax = order.calculateFinal();
-        double tax = calculateTax();
-        double finalWithTax = calculateFinalWithTax();
-
-        bottomPriceButton.setText(
-                String.format(
-                        "Original: $%.2f     Before Tax: $%.2f     Tax: $%.2f     Final: $%.2f",
-                        original,
-                        beforeTax,
-                        tax,
-                        finalWithTax));
-
-        if (orderListModel != null) {
-            updateOrderSidePanel();
-        }
-    }
-
-    private void showOrderListWindow() {
-        JFrame frame = new JFrame("Order List");
-        frame.setSize(900, 600);
-        frame.setLocationRelativeTo(this);
-        frame.setLayout(new BorderLayout());
-
-        DefaultListModel<String> listModel = new DefaultListModel<>();
-        JList<String> orderList = new JList<>(listModel);
-
-        ArrayList<Object> realItems = new ArrayList<>();
-
-        loadOrderList(listModel, realItems);
-
-        JButton deleteButton = new JButton("Delete Selected Item");
-
-        deleteButton.addActionListener(e -> {
-            int index = orderList.getSelectedIndex();
-            if (index == -1) {
-                JOptionPane.showMessageDialog(
-                        frame,
-                        "Please select an item to delete.");
-                return;
-            }
-            Object selectedItem = realItems.get(index);
-            if (selectedItem == null) {
-                JOptionPane.showMessageDialog(
-                        frame,
-                        "Please select a food or combo item.");
-                return;
-            }
-            if (selectedItem instanceof OrderFood) {
-                order.deleteSingleFood((OrderFood) selectedItem);
-            } else if (selectedItem instanceof Combo) {
-                order.deleteCombo((Combo) selectedItem);
-            }
-            listModel.clear();
-            realItems.clear();
-            loadOrderList(listModel, realItems);
-            updateBottomPrice();
-        });
-
-        JButton payButton = new JButton("Pay");
-
-        payButton.addActionListener(e -> {
-            showPaymentWindow(frame);
-        });
-
-        JPanel bottomPanel = new JPanel(new GridLayout(1, 2));
-        bottomPanel.add(deleteButton);
-        bottomPanel.add(payButton);
-
-        frame.add(new JScrollPane(orderList), BorderLayout.CENTER);
-        frame.add(bottomPanel, BorderLayout.SOUTH);
-
-        frame.setVisible(true);
-    }
-
-    private void loadOrderList(DefaultListModel<String> listModel, ArrayList<Object> realItems) {
-        listModel.addElement("----- Single Items -----");
-        realItems.add(null);
-
-        for (OrderFood food : order.getSingleFoods()) {
-            listModel.addElement(
-                    "[Single] " + food.getName() + " - $" + String.format("%.2f", food.getPrice()));
-            realItems.add(food);
-            listModel.addElement(" ");
-            realItems.add(null);
-        }
-
-        listModel.addElement("----- Combo Items -----");
-        realItems.add(null);
-
-        int comboNumber = 1;
-
-        for (Combo combo : order.getCombos()) {
-            listModel.addElement(
-                    "[Combo " + comboNumber + "] Original: $" + String.format("%.2f", combo.getOriginalComboPrice())
-                            + " Final: $" + String.format("%.2f", combo.getFinalComboPrice()));
-            realItems.add(combo);
-            for (OrderFood food : combo.getFoods()) {
-                listModel.addElement(
-                        "    • " + food.getName()
-                                + " (" + food.getType() + ")"
-                                + " - $" + String.format("%.2f", food.getPrice()));
-                realItems.add(null);
-            }
-            comboNumber++;
-        }
-        listModel.addElement("----- Total -----");
-        realItems.add(null);
-        listModel.addElement("Original Total: $" + String.format("%.2f", order.calculateOriginal()));
-        realItems.add(null);
-        listModel.addElement("Before Tax: $" + String.format("%.2f", order.calculateFinal()));
-        realItems.add(null);
-        listModel.addElement("Tax: $" + String.format("%.2f", calculateTax()));
-        realItems.add(null);
-        listModel.addElement("Final Total: $" + String.format("%.2f", calculateFinalWithTax()));
-        realItems.add(null);
-    }
-
-    private void showPaymentWindow(JFrame orderFrame) {
-        JFrame paymentFrame = new JFrame("Payment");
-        paymentFrame.setSize(400, 300);
-        paymentFrame.setLocationRelativeTo(this);
-        paymentFrame.setLayout(new GridLayout(0, 1, 10, 10));
-
-        JLabel title = new JLabel("Choose Payment Method", SwingConstants.CENTER);
-        title.setFont(new Font("Helvetica Neue", Font.BOLD, 22));
-
-        JLabel totalLabel = new JLabel(
-                String.format("Total: $%.2f", calculateFinalWithTax()),
-                SwingConstants.CENTER);
-
-        JButton creditButton = new JButton("Credit / Debit Card");
-        JButton cashButton = new JButton("Cash");
-        JButton etransferButton = new JButton("E-transfer");
-
-        creditButton.addActionListener(e -> finishPayment(paymentFrame, orderFrame, "Credit / Debit Card"));
-        cashButton.addActionListener(e -> finishPayment(paymentFrame, orderFrame, "Cash"));
-        etransferButton.addActionListener(e -> finishPayment(paymentFrame, orderFrame, "E-transfer"));
-
-        paymentFrame.add(title);
-        paymentFrame.add(totalLabel);
-        paymentFrame.add(creditButton);
-        paymentFrame.add(cashButton);
-        paymentFrame.add(etransferButton);
-
-        paymentFrame.setVisible(true);
-    }
-
-    private void finishPayment(JFrame paymentFrame, JFrame orderFrame, String method) {
-        int orderNumber = (int) (Math.random() * 9000) + 1000;
-
-        JOptionPane.showMessageDialog(
-                this,
-                "Payment Successful!\n" +
-                        "Payment Method: " + method + "\n" +
-                        "Order Number: " + orderNumber + "\n" +
-                        String.format("Total Paid: $%.2f", order.calculateFinal()),
-                "Payment Complete",
-                JOptionPane.INFORMATION_MESSAGE);
-
-        paymentFrame.dispose();
-        orderFrame.dispose();
-
-        order.clearOrder();
-        updateBottomPrice();
     }
 }
