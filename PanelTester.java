@@ -1,4 +1,6 @@
 
+import java.awt.Color;
+
 import javax.swing.*;
 
 public class PanelTester {
@@ -7,7 +9,7 @@ public class PanelTester {
 
         JFrame frame = new JFrame(title);
 
-        frame.setSize(900, 600);
+        frame.setSize(1300, 800);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 

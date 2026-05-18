@@ -11,13 +11,13 @@ public class CoverPanel extends JPanel {
         backgroundImage = new ImageIcon("Image/6bd20859-8faf-46c4-90d7-7e368d6cbfdb.png").getImage();
         setLayout(new BorderLayout());
         JLabel title = new JLabel( "WELCOME TO FOOD ORDER",SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 48));
+        title.setFont(new Font("Helvetica Neue", Font.BOLD, 56));
         title.setForeground(Color.WHITE);
         JLabel hint = new JLabel(
                 "Click Anywhere To Start",
                 SwingConstants.CENTER);
 
-        hint.setFont(new Font("Arial", Font.PLAIN, 24));
+        hint.setFont(new Font("Helvetica Neue", Font.PLAIN, 30));
         hint.setForeground(Color.WHITE);
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new GridLayout(2, 1));
