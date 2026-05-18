@@ -3,7 +3,7 @@ import java.awt.*;
 
 public class PaymentFrame extends JFrame {
 
-    public PaymentFrame(Order order, double finalTotal, Runnable afterPayment) {
+    public PaymentFrame(JFrame mainFrame, Order order, double finalTotal, Runnable afterPayment) {
         setTitle("Payment");
         setSize(400, 300);
         setLocationRelativeTo(null);
@@ -28,15 +28,15 @@ public class PaymentFrame extends JFrame {
         UIStyle.styleRedTextButton(etransferButton);
 
         creditButton.addActionListener(e ->
-                finish(order, finalTotal, "Credit / Debit Card", afterPayment)
+                finish(mainFrame, order, finalTotal, "Credit / Debit Card", afterPayment)
         );
 
         cashButton.addActionListener(e ->
-                finish(order, finalTotal, "Cash", afterPayment)
+                finish(mainFrame, order, finalTotal, "Cash", afterPayment)
         );
 
         etransferButton.addActionListener(e ->
-                finish(order, finalTotal, "E-transfer", afterPayment)
+                finish(mainFrame, order, finalTotal, "E-transfer", afterPayment)
         );
 
         add(title);
@@ -49,6 +49,7 @@ public class PaymentFrame extends JFrame {
     }
 
     private void finish(
+            JFrame mainFrame,
             Order order,
             double finalTotal,
             String method,
@@ -68,6 +69,8 @@ public class PaymentFrame extends JFrame {
 
         order.clearOrder();
         afterPayment.run();
+        mainFrame.dispose();
         dispose();
+        new StartFrame();
     }
 }

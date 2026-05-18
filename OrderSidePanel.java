@@ -17,8 +17,7 @@ public class OrderSidePanel extends JPanel {
     public OrderSidePanel(
             Order order,
             Runnable refreshMainPrice,
-            Supplier<Double> finalWithTaxSupplier
-    ) {
+            Supplier<Double> finalWithTaxSupplier) {
         this.order = order;
         this.refreshMainPrice = refreshMainPrice;
         this.finalWithTaxSupplier = finalWithTaxSupplier;
@@ -33,8 +32,7 @@ public class OrderSidePanel extends JPanel {
                 0,
                 0,
                 new Font("Avenir Next", Font.BOLD, 24),
-                UIStyle.DARK_RED
-        ));
+                UIStyle.DARK_RED));
 
         listModel = new DefaultListModel<>();
         orderList = new JList<>(listModel);
@@ -53,7 +51,9 @@ public class OrderSidePanel extends JPanel {
         UIStyle.styleRedTextButton(payButton);
 
         payButton.addActionListener(e -> {
-            new PaymentFrame(order, finalWithTaxSupplier.get(), () -> {
+            JFrame mainFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+
+            new PaymentFrame(mainFrame,order,finalWithTaxSupplier.get(),() -> {
                 refresh();
                 refreshMainPrice.run();
             });
@@ -127,8 +127,7 @@ public class OrderSidePanel extends JPanel {
         for (OrderFood food : order.getSingleFoods()) {
             listModel.addElement(
                     "[Single] " + food.getName()
-                            + " - $" + String.format("%.2f", food.getPrice())
-            );
+                            + " - $" + String.format("%.2f", food.getPrice()));
             realItems.add(food);
         }
 
@@ -145,8 +144,7 @@ public class OrderSidePanel extends JPanel {
                     "[Combo " + comboNumber + "] Original: $"
                             + String.format("%.2f", combo.getOriginalComboPrice())
                             + " Final: $"
-                            + String.format("%.2f", combo.getFinalComboPrice())
-            );
+                            + String.format("%.2f", combo.getFinalComboPrice()));
 
             realItems.add(combo);
 
@@ -154,8 +152,7 @@ public class OrderSidePanel extends JPanel {
                 listModel.addElement(
                         "    • " + food.getName()
                                 + " (" + food.getType() + ")"
-                                + " - $" + String.format("%.2f", food.getPrice())
-                );
+                                + " - $" + String.format("%.2f", food.getPrice()));
                 realItems.add(null);
             }
 
@@ -166,8 +163,7 @@ public class OrderSidePanel extends JPanel {
         realItems.add(null);
 
         listModel.addElement(
-                "Final Total: $" + String.format("%.2f", finalWithTaxSupplier.get())
-        );
+                "Final Total: $" + String.format("%.2f", finalWithTaxSupplier.get()));
         realItems.add(null);
     }
 }
