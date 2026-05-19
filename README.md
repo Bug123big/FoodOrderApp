@@ -148,6 +148,6 @@ Encapsulation
 User Input Handling
 Randomized Discounts
 Method Interaction
-🎯 Project Goal
+🎯 Project Goal：
 
 Jixiao Express was created to practice Java programming and object-oriented design by building a realistic food ordering application with structured classes, interactive features, and organized data management.
