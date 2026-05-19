@@ -23,8 +23,24 @@ public final class BackgroundMusic {
         Platform.runLater(() -> {
             player = new MediaPlayer(new Media(musicUrl.toExternalForm()));
             player.setCycleCount(MediaPlayer.INDEFINITE);
-            player.setVolume(0.3);
+            player.setVolume(0.1);
             player.play();
+        });
+    }
+
+    public static void stop() {
+        if (!javafxStarted) {
+            return;
+        }
+
+        Platform.runLater(() -> {
+            if (player != null) {
+                player.stop();
+                player.dispose();
+                player = null;
+            }
+            Platform.exit();
+            javafxStarted = false;
         });
     }
 
