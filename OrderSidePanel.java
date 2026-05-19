@@ -156,6 +156,7 @@ public class OrderSidePanel extends JPanel {
                             + extraInfo
                             + " - $"
                             + String.format("%.2f", food.getPrice()));
+            realItems.add(food);
         }
 
         listModel.addElement(" ");
