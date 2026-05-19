@@ -26,8 +26,7 @@ public class MainOrderPanel extends JPanel {
                 () -> showEntrees(),
                 () -> showDesserts(),
                 () -> showDrinks(),
-                () -> showComboPanel()
-        ), BorderLayout.WEST);
+                () -> showComboPanel()), BorderLayout.WEST);
 
         menuPanel = new JPanel(new GridLayout(0, 3, 12, 12));
         menuPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -38,8 +37,7 @@ public class MainOrderPanel extends JPanel {
         orderSidePanel = new OrderSidePanel(
                 order,
                 () -> updateBottomPrice(),
-                () -> calculateFinalWithTax()
-        );
+                () -> calculateFinalWithTax());
 
         add(orderSidePanel, BorderLayout.EAST);
 
@@ -77,9 +75,7 @@ public class MainOrderPanel extends JPanel {
                         order.calculateOriginal(),
                         order.calculateFinal(),
                         calculateTax(),
-                        calculateFinalWithTax()
-                )
-        );
+                        calculateFinalWithTax()));
 
         if (orderSidePanel != null) {
             orderSidePanel.refresh();
@@ -124,20 +120,128 @@ public class MainOrderPanel extends JPanel {
 
         JLabel priceLabel = new JLabel(
                 String.format("$%.2f", item.getPrice()),
-                SwingConstants.CENTER
-        );
+                SwingConstants.CENTER);
         priceLabel.setForeground(UIStyle.LIGHT_GOLD);
 
         JButton addButton = new JButton("Add");
         UIStyle.styleGoldButton(addButton);
 
         addButton.addActionListener(e -> {
-            OrderFood food = new OrderFood(
-                    item.getName(),
-                    item.getPrice(),
-                    1,
-                    item.getType()
-            );
+
+            OrderFood food;
+
+            String type = item.getType().toLowerCase();
+
+            if (type.equals("entree")) {
+
+                JPanel panel = new JPanel(new BorderLayout(10, 10));
+                panel.setBackground(UIStyle.CREAM);
+                panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+                JLabel title = new JLabel("Choose Entree Type", SwingConstants.CENTER);
+                title.setFont(new Font("Avenir Next", Font.BOLD, 22));
+                title.setForeground(UIStyle.DARK_RED);
+
+                JCheckBox childCheckBox = new JCheckBox("Child Food  35% off");
+                childCheckBox.setFont(new Font("Avenir Next", Font.BOLD, 18));
+                childCheckBox.setForeground(UIStyle.DARK_RED);
+                childCheckBox.setBackground(UIStyle.CREAM);
+                childCheckBox.setFocusPainted(false);
+
+                panel.add(title, BorderLayout.NORTH);
+                panel.add(childCheckBox, BorderLayout.CENTER);
+
+                int result = JOptionPane.showConfirmDialog(
+                        this,
+                        panel,
+                        "Entree Option",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.PLAIN_MESSAGE);
+
+                if (result != JOptionPane.OK_OPTION) {
+                    return;
+                }
+
+                boolean isChildFood = childCheckBox.isSelected();
+
+                food = new OrderEntree(
+                        item.getName(),
+                        item.getPrice(),
+                        1,
+                        isChildFood);
+
+            } else if (type.equals("drink")) {
+
+                JPanel panel = new JPanel(new BorderLayout(10, 10));
+                panel.setBackground(UIStyle.CREAM);
+                panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+                JLabel title = new JLabel("Choose Drink Size", SwingConstants.CENTER);
+                title.setFont(new Font("Avenir Next", Font.BOLD, 22));
+                title.setForeground(UIStyle.DARK_RED);
+
+                JPanel optionPanel = new JPanel(new GridLayout(0, 1, 8, 8));
+                optionPanel.setBackground(UIStyle.CREAM);
+
+                JRadioButton small = new JRadioButton("Small");
+                JRadioButton medium = new JRadioButton("Medium  +$1.50");
+                JRadioButton large = new JRadioButton("Large  +$3.00");
+
+                small.setSelected(true);
+
+                ButtonGroup group = new ButtonGroup();
+                group.add(small);
+                group.add(medium);
+                group.add(large);
+
+                JRadioButton[] buttons = { small, medium, large };
+
+                for (JRadioButton b : buttons) {
+                    b.setFont(new Font("Avenir Next", Font.BOLD, 18));
+                    b.setForeground(UIStyle.DARK_RED);
+                    b.setBackground(UIStyle.CREAM);
+                    b.setFocusPainted(false);
+                    optionPanel.add(b);
+                }
+
+                panel.add(title, BorderLayout.NORTH);
+                panel.add(optionPanel, BorderLayout.CENTER);
+
+                int result = JOptionPane.showConfirmDialog(
+                        this,
+                        panel,
+                        "Drink Size",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.PLAIN_MESSAGE);
+
+                if (result != JOptionPane.OK_OPTION) {
+                    return;
+                }
+
+                int size;
+
+                if (small.isSelected()) {
+                    size = 0;
+                } else if (medium.isSelected()) {
+                    size = 1;
+                } else {
+                    size = 2;
+                }
+
+                food = new OrderDrink(
+                        item.getName(),
+                        item.getPrice(),
+                        1,
+                        size);
+
+            } else {
+
+                food = new OrderFood(
+                        item.getName(),
+                        item.getPrice(),
+                        1,
+                        item.getType());
+            }
 
             order.addSingleFood(food);
             updateBottomPrice();
@@ -161,8 +265,7 @@ public class MainOrderPanel extends JPanel {
         Image scaledImage = icon.getImage().getScaledInstance(
                 150,
                 120,
-                Image.SCALE_SMOOTH
-        );
+                Image.SCALE_SMOOTH);
 
         JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -196,8 +299,7 @@ public class MainOrderPanel extends JPanel {
                     "adult entree",
                     countLabel,
                     nextButton,
-                    "entree"
-            ));
+                    "entree"));
         }
 
         nextButton.addActionListener(e -> showComboDessertStep());
@@ -226,8 +328,7 @@ public class MainOrderPanel extends JPanel {
                     "dessert",
                     countLabel,
                     nextButton,
-                    "dessert"
-            ));
+                    "dessert"));
         }
 
         updateComboStepLabel(countLabel, "dessert");
@@ -259,8 +360,7 @@ public class MainOrderPanel extends JPanel {
                     "drink",
                     countLabel,
                     orderButton,
-                    "drink"
-            ));
+                    "drink"));
         }
 
         updateComboStepLabel(countLabel, "drink");
@@ -286,8 +386,7 @@ public class MainOrderPanel extends JPanel {
                         this,
                         "Invalid combo. Entrees, desserts, and drinks must have the same amount.",
                         "Combo Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -322,8 +421,7 @@ public class MainOrderPanel extends JPanel {
             JPanel page,
             JPanel foodGrid,
             JLabel countLabel,
-            JButton button
-    ) {
+            JButton button) {
         JPanel bottom = new JPanel(new GridLayout(2, 1));
         bottom.setBackground(UIStyle.CREAM);
         bottom.add(countLabel);
@@ -345,8 +443,7 @@ public class MainOrderPanel extends JPanel {
             String type,
             JLabel countLabel,
             JButton nextOrOrderButton,
-            String step
-    ) {
+            String step) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(UIStyle.CREAM);
         card.setBorder(BorderFactory.createLineBorder(UIStyle.DARK_RED, 3));
@@ -359,8 +456,7 @@ public class MainOrderPanel extends JPanel {
 
         JLabel priceLabel = new JLabel(
                 String.format("$%.2f", item.getPrice()),
-                SwingConstants.CENTER
-        );
+                SwingConstants.CENTER);
         priceLabel.setForeground(UIStyle.DARK_RED);
 
         JLabel amountLabel = new JLabel("Selected: 0", SwingConstants.CENTER);
@@ -373,18 +469,46 @@ public class MainOrderPanel extends JPanel {
         UIStyle.styleRedTextButton(removeButton);
 
         addButton.addActionListener(e -> {
-            OrderFood food = new OrderFood(
-                    item.getName(),
-                    item.getPrice(),
-                    1,
-                    type
-            );
+
+            OrderFood food;
+
+            if (type.equals("adult entree")) {
+
+                boolean isChildFood = showChildFoodDialog();
+
+                food = new OrderEntree(
+                        item.getName(),
+                        item.getPrice(),
+                        1,
+                        isChildFood);
+
+            } else if (type.equals("drink")) {
+
+                int size = showDrinkSizeDialog();
+
+                if (size == -1) {
+                    return;
+                }
+
+                food = new OrderDrink(
+                        item.getName(),
+                        item.getPrice(),
+                        1,
+                        size);
+
+            } else {
+
+                food = new OrderFood(
+                        item.getName(),
+                        item.getPrice(),
+                        1,
+                        type);
+            }
 
             comboFood.add(food);
 
             amountLabel.setText(
-                    "Selected: " + countSpecificComboFood(item.getName(), type)
-            );
+                    "Selected: " + countSpecificComboFood(item.getName(), food.getType()));
 
             updateComboStepLabel(countLabel, step);
             updateComboButtonVisibility(nextOrOrderButton, step);
@@ -394,8 +518,7 @@ public class MainOrderPanel extends JPanel {
             removeOneComboFood(item.getName(), type);
 
             amountLabel.setText(
-                    "Selected: " + countSpecificComboFood(item.getName(), type)
-            );
+                    "Selected: " + countSpecificComboFood(item.getName(), type));
 
             updateComboStepLabel(countLabel, step);
             updateComboButtonVisibility(nextOrOrderButton, step);
@@ -416,6 +539,89 @@ public class MainOrderPanel extends JPanel {
         card.add(buttonPanel, BorderLayout.SOUTH);
 
         return card;
+    }
+
+    private boolean showChildFoodDialog() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(UIStyle.CREAM);
+
+        JLabel title = new JLabel("Choose Entree Type", SwingConstants.CENTER);
+        title.setFont(new Font("Avenir Next", Font.BOLD, 20));
+        title.setForeground(UIStyle.DARK_RED);
+
+        JCheckBox childCheckBox = new JCheckBox("Child Food  35% off");
+        childCheckBox.setFont(new Font("Avenir Next", Font.BOLD, 16));
+        childCheckBox.setForeground(UIStyle.DARK_RED);
+        childCheckBox.setBackground(UIStyle.CREAM);
+
+        panel.add(title, BorderLayout.NORTH);
+        panel.add(childCheckBox, BorderLayout.CENTER);
+
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                panel,
+                "Entree Option",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+
+        if (result != JOptionPane.OK_OPTION) {
+            return false;
+        }
+
+        return childCheckBox.isSelected();
+    }
+
+    private int showDrinkSizeDialog() {
+        JPanel panel = new JPanel(new GridLayout(0, 1, 8, 8));
+        panel.setBackground(UIStyle.CREAM);
+
+        JLabel title = new JLabel("Choose Drink Size", SwingConstants.CENTER);
+        title.setFont(new Font("Avenir Next", Font.BOLD, 20));
+        title.setForeground(UIStyle.DARK_RED);
+
+        JRadioButton small = new JRadioButton("Small");
+        JRadioButton medium = new JRadioButton("Medium  +$1.50");
+        JRadioButton large = new JRadioButton("Large  +$3.00");
+
+        small.setSelected(true);
+
+        ButtonGroup group = new ButtonGroup();
+        group.add(small);
+        group.add(medium);
+        group.add(large);
+
+        JRadioButton[] buttons = { small, medium, large };
+
+        for (JRadioButton b : buttons) {
+            b.setFont(new Font("Avenir Next", Font.BOLD, 16));
+            b.setForeground(UIStyle.DARK_RED);
+            b.setBackground(UIStyle.CREAM);
+            panel.add(b);
+        }
+
+        JPanel wrapper = new JPanel(new BorderLayout(10, 10));
+        wrapper.setBackground(UIStyle.CREAM);
+        wrapper.add(title, BorderLayout.NORTH);
+        wrapper.add(panel, BorderLayout.CENTER);
+
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                wrapper,
+                "Drink Size",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+
+        if (result != JOptionPane.OK_OPTION) {
+            return -1;
+        }
+
+        if (small.isSelected()) {
+            return 0;
+        } else if (medium.isSelected()) {
+            return 1;
+        } else {
+            return 2;
+        }
     }
 
     private int countSpecificComboFood(String name, String type) {

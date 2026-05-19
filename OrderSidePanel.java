@@ -53,7 +53,7 @@ public class OrderSidePanel extends JPanel {
         payButton.addActionListener(e -> {
             JFrame mainFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
 
-            new PaymentFrame(mainFrame,order,finalWithTaxSupplier.get(),() -> {
+            new PaymentFrame(mainFrame, order, finalWithTaxSupplier.get(), () -> {
                 refresh();
                 refreshMainPrice.run();
             });
@@ -125,10 +125,37 @@ public class OrderSidePanel extends JPanel {
         realItems.add(null);
 
         for (OrderFood food : order.getSingleFoods()) {
+            String extraInfo = "";
+
+            if (food instanceof OrderEntree) {
+
+                OrderEntree entree = (OrderEntree) food;
+
+                if (entree.getChildrenFood()) {
+                    extraInfo = " [Child]";
+                } else {
+                    extraInfo = " [Adult]";
+                }
+
+            } else if (food instanceof OrderDrink) {
+
+                OrderDrink drink = (OrderDrink) food;
+
+                if (drink.getSize() == 0) {
+                    extraInfo = " [Small]";
+                } else if (drink.getSize() == 1) {
+                    extraInfo = " [Medium]";
+                } else {
+                    extraInfo = " [Large]";
+                }
+            }
+
             listModel.addElement(
-                    "[Single] " + food.getName()
-                            + " - $" + String.format("%.2f", food.getPrice()));
-            realItems.add(food);
+                    "[Single] "
+                            + food.getName()
+                            + extraInfo
+                            + " - $"
+                            + String.format("%.2f", food.getPrice()));
         }
 
         listModel.addElement(" ");
@@ -149,11 +176,37 @@ public class OrderSidePanel extends JPanel {
             realItems.add(combo);
 
             for (OrderFood food : combo.getFoods()) {
+                String extraInfo = "";
+
+                if (food instanceof OrderEntree) {
+
+                    OrderEntree entree = (OrderEntree) food;
+
+                    if (entree.getChildrenFood()) {
+                        extraInfo = " [Child]";
+                    } else {
+                        extraInfo = " [Adult]";
+                    }
+
+                } else if (food instanceof OrderDrink) {
+
+                    OrderDrink drink = (OrderDrink) food;
+
+                    if (drink.getSize() == 0) {
+                        extraInfo = " [Small]";
+                    } else if (drink.getSize() == 1) {
+                        extraInfo = " [Medium]";
+                    } else {
+                        extraInfo = " [Large]";
+                    }
+                }
+
                 listModel.addElement(
-                        "    • " + food.getName()
-                                + " (" + food.getType() + ")"
-                                + " - $" + String.format("%.2f", food.getPrice()));
-                realItems.add(null);
+                        "    • "
+                                + food.getName()
+                                + extraInfo
+                                + " - $"
+                                + String.format("%.2f", food.getPrice()));
             }
 
             comboNumber++;
