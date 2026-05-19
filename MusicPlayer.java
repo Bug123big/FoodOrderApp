@@ -19,7 +19,7 @@ public class Main extends Application {
         player.setCycleCount(MediaPlayer.INDEFINITE);
 
         // volume (0.0 to 1.0)
-        player.setVolume(0.3);
+        player.setVolume(0.5);
 
         // autoplay
         player.play();
