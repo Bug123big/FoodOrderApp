@@ -150,10 +150,17 @@ public class OrderSidePanel extends JPanel {
                 }
             }
 
+            String specialInfo = "";
+
+            if (food.isLimitedSpecial()) {
+                specialInfo = " [Limited Special]";
+            }
+
             listModel.addElement(
                     "[Single] "
                             + food.getName()
                             + extraInfo
+                            + specialInfo
                             + " - $"
                             + String.format("%.2f", food.getPrice()));
             realItems.add(food);

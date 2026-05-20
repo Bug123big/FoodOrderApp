@@ -1,9 +1,10 @@
 public class OrderEntree extends OrderFood {
     private boolean childrenFood;
-    public OrderEntree() {
-    }
     public OrderEntree(String name, double price, int amount, boolean childrenFood) {
-        super(name, price, amount, "entree");
+        this(name, price, amount, childrenFood, false);
+    }
+    public OrderEntree(String name, double price, int amount, boolean childrenFood, boolean limitedSpecial) {
+        super(name, price, amount, "entree", limitedSpecial);
         this.childrenFood = childrenFood;
     }
     public void setChildrenFood(boolean childrenFood) {

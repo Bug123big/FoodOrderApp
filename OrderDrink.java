@@ -1,9 +1,10 @@
 public class OrderDrink extends OrderFood {
     private int size;
-    public OrderDrink() {
-    }
     public OrderDrink(String name, double price, int amount, int size) {
-        super(name, price, amount, "drink");
+        this(name, price, amount, size, false);
+    }
+    public OrderDrink(String name, double price, int amount, int size, boolean limitedSpecial) {
+        super(name, price, amount, "drink", limitedSpecial);
         setSize(size);
     }
     public void setSize(int size) {

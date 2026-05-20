@@ -23,6 +23,7 @@ public class MainOrderPanel extends JPanel {
         setBackground(UIStyle.DARK_RED);
 
         add(new CategoryPanel(
+                () -> showTodaySpecials(),
                 () -> showEntrees(),
                 () -> showDesserts(),
                 () -> showDrinks(),
@@ -82,6 +83,19 @@ public class MainOrderPanel extends JPanel {
         }
     }
 
+    private void showTodaySpecials() {
+        clearMenu();
+
+        menuPanel.setLayout(new GridLayout(0, 3, 12, 12));
+
+        for (FoodStorage item : menu.getTodaySpecials()) {
+            addFoodCard(item);
+        }
+
+        menuPanel.revalidate();
+        menuPanel.repaint();
+    }
+
     private void showEntrees() {
         showMenuByType("entree");
     }
@@ -108,6 +122,8 @@ public class MainOrderPanel extends JPanel {
     }
 
     private void addFoodCard(FoodStorage item) {
+        boolean isSpecialToday = menu.isTodaySpecial(item);
+        double finalPrice = menu.getFinalPrice(item);
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(UIStyle.DARK_RED);
         card.setBorder(BorderFactory.createLineBorder(UIStyle.GOLD, 2));
@@ -118,15 +134,48 @@ public class MainOrderPanel extends JPanel {
         nameLabel.setFont(new Font("Helvetica Neue", Font.BOLD, 16));
         nameLabel.setForeground(UIStyle.LIGHT_GOLD);
 
-        JLabel priceLabel = new JLabel(
-                String.format("$%.2f", item.getPrice()),
-                SwingConstants.CENTER);
+        JLabel priceLabel;
+
+        if (isSpecialToday) {
+
+            priceLabel = new JLabel(
+                    "<html><center>"
+                            + "LIMITED SPECIAL<br>"
+                            + "<strike>$"
+                            + String.format("%.2f", item.getPrice())
+                            + "</strike>   $"
+                            + String.format("%.2f", finalPrice)
+                            + "</center></html>",
+                    SwingConstants.CENTER);
+
+        } else {
+
+            priceLabel = new JLabel(
+                    String.format("$%.2f", item.getPrice()),
+                    SwingConstants.CENTER);
+        }
         priceLabel.setForeground(UIStyle.LIGHT_GOLD);
 
         JButton addButton = new JButton("Add");
+
         UIStyle.styleGoldButton(addButton);
 
+        if (isSpecialToday && order.hasLimitedSpecial(item.getName())) {
+
+            addButton.setEnabled(false);
+
+            addButton.setBackground(Color.GRAY);
+
+            addButton.setForeground(Color.WHITE);
+
+            addButton.setText("Sold Out");
+        }
+
         addButton.addActionListener(e -> {
+
+            if (isSpecialToday && order.hasLimitedSpecial(item.getName())) {
+                return;
+            }
 
             OrderFood food;
 
@@ -166,9 +215,10 @@ public class MainOrderPanel extends JPanel {
 
                 food = new OrderEntree(
                         item.getName(),
-                        item.getPrice(),
+                        finalPrice,
                         1,
-                        isChildFood);
+                        isChildFood,
+                        isSpecialToday);
 
             } else if (type.equals("drink")) {
 
@@ -230,21 +280,28 @@ public class MainOrderPanel extends JPanel {
 
                 food = new OrderDrink(
                         item.getName(),
-                        item.getPrice(),
+                        finalPrice,
                         1,
-                        size);
-
+                        size,
+                        isSpecialToday);
             } else {
 
                 food = new OrderFood(
                         item.getName(),
                         item.getPrice(),
                         1,
-                        item.getType());
+                        item.getType(),
+                        isSpecialToday);
             }
 
             order.addSingleFood(food);
             updateBottomPrice();
+
+            if (isSpecialToday) {
+                showTodaySpecials();
+            } else {
+                showMenuByType(item.getType());
+            }
         });
 
         JPanel infoPanel = new JPanel(new GridLayout(2, 1));

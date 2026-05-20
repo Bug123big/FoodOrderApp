@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import javafx.application.Platform;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -62,3 +63,31 @@ public final class BackgroundMusic {
         }
     }
 }
+=======
+import javax.sound.sampled.*;
+import java.io.File;
+
+public class BackgroundMusic {
+    private static Clip clip;
+    
+    public static void playLoop(String path) {
+        try {
+            AudioInputStream audio =
+                    AudioSystem.getAudioInputStream(
+                            new File(path));
+            clip = AudioSystem.getClip();
+            clip.open(audio);
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void stop() {
+        if (clip != null) {
+            clip.stop();
+        }
+    }
+}
+>>>>>>> 58cb93a (change music code and add today special method)
